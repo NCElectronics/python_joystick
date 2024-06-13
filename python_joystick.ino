@@ -21,6 +21,7 @@ void loop() {
   int down = digitalRead(downButton);
   int left = digitalRead(leftButton);
   int right = digitalRead(rightButton);
+
   if (up == LOW || down == LOW || left == LOW || right == LOW) {
     digitalWrite(LED_BUILTIN, HIGH);
   } else {
@@ -30,6 +31,10 @@ void loop() {
   int x = map(analogRead(joyX), 0, 1023, -512, 512);
   int y = map(analogRead(joyY), 0, 1023, -512, 512);
 
-  Serial.print(String(x) + "," + String(y) + "\n");
-  delay(100);
+  Serial.print(
+    String(x) + "," + String(y)
+    + "," + String(up == LOW) + "," + String(down == LOW) + "," + String(left == LOW) + "," + String(right == LOW)
+    + "\n");
+  
+  //delay(200);
 }
