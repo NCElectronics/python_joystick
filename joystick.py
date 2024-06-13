@@ -7,6 +7,10 @@ jsUp = 'w'
 jsDown = 's'
 jsLeft = 'a'
 jsRight = 'd'
+dPadUp = 'i'
+dPadDown = 'k'
+dPadLeft = 'j'
+dPadRight = 'l'
 keyMode = 'hold' # 'hold' or 'ak47'
 sensiThreshold = 255
 # END CONFIG
@@ -14,7 +18,8 @@ sensiThreshold = 255
 # STATE
 keysDown = {}
 arduino = serial.Serial(
-	port = '/dev/ttyACM0',
+#	port = '/dev/ttyACM0',
+	port = '/dev/ttyUSB0',
 	baudrate = 115200,
 	timeout = .1
 )
@@ -61,14 +66,23 @@ def handleJoyStickInput(x, y):
 
 while True:
 #	time.sleep(0.1)
-	line = arduino.readline().strip().decode('utf-8')
-	if len(line) < 1:
+	try:
+		line = arduino.readline().strip().decode('utf-8')
+	except:
 		continue
-	splitted = line.split(',', 1)
-	if len(splitted) != 2:
+
+#	print(len(line))
+	if len(line) < 11: # 0,0,0,0,0,0
+		continue
+
+	splitted = line.split(',', 5)
+
+#	print(len(splitted))
+	if len(splitted) != 6:
 		continue
 
 # jak jestes w stanie przeczytac Keyes_SJoys to y,x to jest dobra orientacja xd
+# w zasadzie to jednak na odwrut
 	y = int(splitted[0])
 	if abs(y) < sensiThreshold:
 		y = 0
@@ -76,6 +90,11 @@ while True:
 	if abs(x) < sensiThreshold:
 		x = 0
 
-#	print(x, y)
-	handleJoyStickInput(x, y)
+	up = splitted[2]
+	down = splitted[3]
+	left = splitted[4]
+	right = splitted[5]
+
+	print(x, y, up, down, left, right)
+#	handleJoyStickInput(x, y)
 
