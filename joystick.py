@@ -7,22 +7,21 @@ jsUp = 'w'
 jsDown = 's'
 jsLeft = 'a'
 jsRight = 'd'
-dPadUp = 'i'
-dPadDown = 'k'
-dPadLeft = 'j'
-dPadRight = 'l'
+rotateJoystick = False
+dPadUp = 't'
+dPadDown = 'g'
+dPadLeft = 'f'
+dPadRight = 'h'
 keyMode = 'hold' # 'hold' or 'ak47'
 sensiThreshold = 255
+serialPort = '/dev/ttyUSB0' # /dev/ttyUSB1 in the other joystick
+serialBaudrate = 115200
+serialTimeout = .1
 # END CONFIG
 
 # STATE
 keysDown = {}
-arduino = serial.Serial(
-#	port = '/dev/ttyACM0',
-	port = '/dev/ttyUSB0',
-	baudrate = 115200,
-	timeout = .1
-)
+arduinoSerial = serial.Serial()
 # END STATE
 
 def keyDown(key):
@@ -43,7 +42,7 @@ def keyUp(key):
 #		print('[debug] key up: ', key)
 
 
-def handleJoyStickInput(x, y):
+def handleJoystickInput(x, y):
 	if x > 0:
 		keyDown(jsRight)
 		keyUp(jsLeft)
@@ -64,37 +63,71 @@ def handleJoyStickInput(x, y):
 		keyUp(jsDown)
 
 
+def handleButtonsInput(up, down, left, right):
+	if up == 1:
+		keyDown(dPadUp)
+	else:
+		keyUp(dPadUp)
+	if down == 1:
+		keyDown(dPadDown)
+	else:
+		keyUp(dPadDown)
+	if left == 1:
+		keyDown(dPadLeft)
+	else:
+		keyUp(dPadLeft)
+	if right == 1:
+		keyDown(dPadRight)
+	else:
+		keyUp(dPadRight)
+
+
+arduinoSerial.port = serialPort
+arduinoSerial.baudrate = serialBaudrate
+arduinoSerial.timeout = serialTimeout
+
+
 while True:
-#	time.sleep(0.1)
-	try:
-		line = arduino.readline().strip().decode('utf-8')
-	except:
-		continue
+	if arduinoSerial.is_open:
+		try:
+			line = arduinoSerial.readline().strip().decode('utf-8')
+		except:
+			arduinoSerial.close()
+			continue
 
-#	print(len(line))
-	if len(line) < 11: # 0,0,0,0,0,0
-		continue
+		if len(line) < 11: # 0,0,0,0,0,0
+			continue
 
-	splitted = line.split(',', 5)
+		splitted = line.split(',', 5)
 
-#	print(len(splitted))
-	if len(splitted) != 6:
-		continue
+		if len(splitted) != 6:
+			continue
 
-# jak jestes w stanie przeczytac Keyes_SJoys to y,x to jest dobra orientacja xd
-# w zasadzie to jednak na odwrut
-	y = int(splitted[0])
-	if abs(y) < sensiThreshold:
-		y = 0
-	x = int(splitted[1])
-	if abs(x) < sensiThreshold:
-		x = 0
+		y = int(splitted[1])
+		if abs(y) < sensiThreshold:
+			y = 0
 
-	up = splitted[2]
-	down = splitted[3]
-	left = splitted[4]
-	right = splitted[5]
+		x = int(splitted[0])
+		if abs(x) < sensiThreshold:
+			x = 0
 
-	print(x, y, up, down, left, right)
-#	handleJoyStickInput(x, y)
+		if rotateJoystick:
+			x *= -1
+			y *= -1
+
+		up = int(splitted[2])
+		down = int(splitted[3])
+		left = int(splitted[4])
+		right = int(splitted[5])
+
+		handleButtonsInput(up, down, left, right)
+		handleJoystickInput(x, y)
+	else:
+#		time.sleep(2)
+#		print('closed ' + str(time.time()))
+		try:
+			arduinoSerial.open()
+		except:
+			continue
+
 
