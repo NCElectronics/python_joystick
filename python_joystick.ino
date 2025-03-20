@@ -28,13 +28,11 @@ void loop() {
     digitalWrite(LED_BUILTIN, LOW);
   }
 
-  int x = map(analogRead(joyX), 0, 1023, -512, 512);
+  int x = map(analogRead(joyX), 0, 1023, 512, -512);
   int y = map(analogRead(joyY), 0, 1023, -512, 512);
 
   Serial.print(
     String(x) + "," + String(y)
     + "," + String(up == LOW) + "," + String(down == LOW) + "," + String(left == LOW) + "," + String(right == LOW)
     + "\n");
-  
-  //delay(200);
 }
